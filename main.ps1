@@ -10,8 +10,6 @@
 #Add AD bits and not complain if they're already there
 Import-Module ActiveDirectory -ErrorAction SilentlyContinue
 
-#Set default password
-$defpassword = (ConvertTo-SecureString "sio2016WSAF" -AsPlainText -force)
 
 #Get domain DNS suffix
 $dnsroot = '@' + (Get-ADDomain).dnsroot
@@ -28,13 +26,17 @@ $dnsroot = '@' + (Get-ADDomain).dnsroot
 
 $delonly = Read-Host -Prompt '[0] Do you want to Add Users (removes old users as well), or [1] Remove old users only? Type number 0, or 1, then ENTER.  Do not press 1 yet.  Option not yet available.'
 
+
 try
 {
 if($delonly -eq 0) 
 {
 $missionID = Read-Host -Prompt 'Input mission ID (ex: SR1705)'
 $missionID = $missionID.ToUpper()
-
+#prompt for password, hide password. 
+$defpassword = Read-Host -AsSecureString 'Enter the default password (usually same as wifi)'
+$defpassword =  [System.Runtime.InteropServices.Marshal]::PtrToStringAuto`
+([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($defpassword))
 #Import user CSV with user info.
 #Future version will prompt user for file path
 #$users = Import-CSV C:\users\sts-cr\desktop\users.csv
