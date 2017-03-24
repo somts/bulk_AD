@@ -24,89 +24,93 @@ $dnsroot = '@' + (Get-ADDomain).dnsroot
 #Future version will prompt user for file path
 #$users = Import-CSV C:\users\sts-cr\desktop\users.csv
 
-$delonly = Read-Host -Prompt '[0] Do you want to Add Users (removes old users as well), or [1] Remove old users only? Type number 0, or 1, then ENTER.  Do not press 1 yet.  Option not yet available.'
+$delonly = Read-Host -Prompt '[0]Do you want to Add Users (removes old users as well)[0], or [1]Remove old users only[1]? 
+Type number 0, or 1, then ENTER.  Do not press 1 yet.  Option not yet available.'
 
 
 try
 {
-if($delonly -eq 0) 
-{
-$missionID = Read-Host -Prompt 'Input mission ID (ex: SR1705)'
-$missionID = $missionID.ToUpper()
-#prompt for password, hide password. 
-$defpassword = Read-Host -AsSecureString 'Enter the default password (usually same as wifi)'
-$defpassword =  [System.Runtime.InteropServices.Marshal]::PtrToStringAuto`
-([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($defpassword))
-#Import user CSV with user info.
-#Future version will prompt user for file path
-#$users = Import-CSV C:\users\sts-cr\desktop\users.csv
+    if($delonly -eq 0) 
+    {
+        $missionID = Read-Host -Prompt 'Input mission ID (ex: SR1705)'
+        $missionID = $missionID.ToUpper()
+        #prompt for password, hide password. 
+        $defpassword = Read-Host -AsSecureString 'Enter the default password (usually same as wifi)'
+ #       $defpassword =  [System.Runtime.InteropServices.Marshal]::PtrToStringAuto `
+  #      {[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($defpassword)}
+        write-host $defpassword
 
-try 
-{
-    $inputfile = Get-FileName
-    $users = Import-CSV $inputfile
-}
+    #Import user CSV with user info.  
+    try 
+    {
+        Write-Host "Choose the proper .csv file."
+        $inputfile = Get-FileName 
+        $users = Import-CSV $inputfile
+    }
 
-catch [System.Object]
-{
-    Write-Output "User cancelled, $_"
-}
+    catch [System.Object]
+    {
+        Write-Output "User cancelled, $_"
+    }
 
-foreach ($user in $users) 
-{
-        try {
+    foreach ($user in $users) 
+                                                                                                                                                                                                    {
+        try 
+        {
              #There are 2 types of users: Science and Crew, Case sensitive
              if($user.Description -eq "Science")
                 {                        
-                    try {
-                         New-ADUser -Name ($user.Firstname + " " + $user.LastName) -SamAccountName ($user.SamAccountName) -Description ($missionID + " " + $user.Description.ToUpper()) `
-                         -DisplayName ($user.Firstname + " " + $user.LastName) -GivenName ($user.FirstName) -Surname ($user.LastName) `
-                         -UserPrincipalName ($user.SamAccountName + $dnsroot) `
-                         -AccountPassword $defpassword -PassThru `
-                         -ChangePasswordAtLogon $true `
-                         -Enabled $true `
-                         -Path "OU=Science,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu"
-                         Add-ADGroupMember -Identity www-science -Members $user.SamAccountName `
-                        }
+                    try 
+                    {
+                        New-ADUser -Name ($user.Firstname + " " + $user.LastName) -SamAccountName ($user.SamAccountName) -Description ($missionID + " " + $user.Description.ToUpper()) `
+                        -DisplayName ($user.Firstname + " " + $user.LastName) -GivenName ($user.FirstName) -Surname ($user.LastName) `
+                        -UserPrincipalName ($user.SamAccountName + $dnsroot) `
+                        -AccountPassword $defpassword -PassThru `
+                        -ChangePasswordAtLogon $true `
+                        -Enabled $true `
+                        -Path "OU=Science,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu"
+                        Add-ADGroupMember -Identity www-science -Members $user.SamAccountName `
+                     }
                      catch [System.Object]
-                        {
-                           Write-Output "Could not group user $($user.SamAccountName), $_ " `
-                         }        
-                  }
+                     {
+                        Write-Output "Could not group user $($user.SamAccountName), $_ " `
+                     }        
+                 }
                                     
              Elseif($user.Description -eq "Crew") 
-                  {         
-                    try {
-                         New-ADUser -Name ($user.Firstname + " " + $user.LastName) -SamAccountName ($user.SamAccountName) -Description ($user.Description.ToUpper()) `
-                         -DisplayName ($user.Firstname + " " + $user.LastName) -GivenName ($user.FirstName) -Surname ($user.LastName) `
-                         -UserPrincipalName ($user.SamAccountName + $dnsroot) `
-                         -AccountPassword $defpassword -PassThru `
-                         -ChangePasswordAtLogon $true `
-                         -Enabled $true `
-                         -Path "OU=SR Crew,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu"
-                         Add-ADGroupMember -Identity www-crew -Members $user.SamAccountName `
-                         }
+                 {         
+                    try 
+                    {
+                        New-ADUser -Name ($user.Firstname + " " + $user.LastName) -SamAccountName ($user.SamAccountName) -Description ($user.Description.ToUpper()) `
+                        -DisplayName ($user.Firstname + " " + $user.LastName) -GivenName ($user.FirstName) -Surname ($user.LastName) `
+                        -UserPrincipalName ($user.SamAccountName + $dnsroot) `
+                        -AccountPassword $defpassword -PassThru `
+                        -ChangePasswordAtLogon $true `
+                        -Enabled $true `
+                        -Path "OU=SR Crew,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu"
+                        Add-ADGroupMember -Identity www-crew -Members $user.SamAccountName `
+                     }
                      catch [System.Object]
-                         {
-                              Write-Output "Could not group user $($user.SamAccountName), $_ " `
-                         }    
-                   }
+                     {
+                        Write-Output "Could not group user $($user.SamAccountName), $_ " `
+                     }    
+                  }
                Else
-                   {
-                         Write-Output "Please specify 'Science' or 'Crew' (case-sensitive) in description in $($user.SamAccountName)'s line in the users.csv file."
-                   }
+                  {
+                    Write-Output "Please specify 'Science' or 'Crew' (case-sensitive) in description in $($user.SamAccountName)'s line in the users.csv file."
+                  }
                 
              }
            
 
         catch [System.Object]
                 {
-                    Write-Output "Could not create user $($user.SamAccountName), $_ " `
+                Write-Output "Could not create user $($user.SamAccountName), $_ " `
                 }
-}
+    }
 
-#Move old mission users to Disabled Users.
-<#
+    #Move old mission users to Disabled Users.
+                                                    <#
 $OldUsers = Get-ADGroupMember -Identity www-science| Import-Csv -path .\temp.csv 
 
 ForEach ($ouser in $OldUsers) 
@@ -121,33 +125,31 @@ ForEach ($ouser in $OldUsers)
   }
   #>
  
- }
- 
+    }
+    elseif($delonly -eq 1)
+    {
 
-elseif($delonly -eq 1)
-{
+        Write-Output "Not available yet.  Closing"
+        #Move old mission users to Disabled Users.
+        <#
+        $OldUsers = Get-ADGroupMember -Identity www-science| Import-Csv -path .\temp.csv 
 
-Write-Output "Not available yet.  Closing"
-#Move old mission users to Disabled Users.
-<#
-$OldUsers = Get-ADGroupMember -Identity www-science| Import-Csv -path .\temp.csv 
-
-ForEach ($ouser in $OldUsers) 
- {
-  $Usercheck = Get-ADUser -Properties Description
-     if($Usercheck -notcontains $missionID) 
-     {
-         Write-Host "Moving $user to Disabled Users"
-         Get-ADUser $ouser| Move-ADObject -TargetPath 'OU=Disabled Users,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu' 
-         Set-ADUser $ouser -Description "SCIENCE"
-     }
-  }
-  #>
-}
-else
-{
+        ForEach ($ouser in $OldUsers) 
+         {
+          $Usercheck = Get-ADUser -Properties Description
+             if($Usercheck -notcontains $missionID) 
+             {
+                 Write-Host "Moving $user to Disabled Users"
+                 Get-ADUser $ouser| Move-ADObject -TargetPath 'OU=Disabled Users,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu' 
+                 Set-ADUser $ouser -Description "SCIENCE"
+             }
+          }
+          #>
+    }
+    else
+    {
         Write-Output "Invalid entry, Closing"
-}
+    }
 
 }
 
