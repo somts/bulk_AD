@@ -1,8 +1,7 @@
 ###################################################################
 #
-#              Mass user load for AD on R/V Sally Ride
+#                Mass user load for AD for STS
 #              Add users list to Active Directory 
-#                      Version 1.2 BETA
 #                      sts-cr@ucsd.edu
 ###################################################################
 . .\Get-FileName.ps1
@@ -14,16 +13,15 @@ Import-Module ActiveDirectory -ErrorAction SilentlyContinue
 #Get domain DNS suffix
 $dnsroot = '@' + (Get-ADDomain).dnsroot
 
-#Sets target OU as Science
 #Path for AD
 #Examples:
 #OU=STS,OU=Users,OU=SOMTS,OU=SIO,DC=AD,DC=UCSD,DC=EDU
 #CN=someuser,OU=People,DC=AD,DC=UCSD,DC=EDU
 
 #Import user CSV with user info.
-#Future version will prompt user for file path
-#$users = Import-CSV C:\users\sts-cr\desktop\users.csv
+#$users = Import-CSV C:\users\sts-cr\desktop\users.csv 
 
+#Prompt user if they want to add users, or remove old users only.  Remove old users to be added in the future.
 $delonly = Read-Host -Prompt '[0]Do you want to Add Users (removes old users as well)[0], or [1]Remove old users only[1]? 
 Type number 0, or 1, then ENTER.  Do not press 1 yet.  Option not yet available.'
 
@@ -36,11 +34,8 @@ try
         $missionID = $missionID.ToUpper()
         #prompt for password, hide password. 
         $defpassword = Read-Host -AsSecureString 'Enter the default password (usually same as wifi)'
- #       $defpassword =  [System.Runtime.InteropServices.Marshal]::PtrToStringAuto `
-  #      {[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($defpassword)}
-        write-host $defpassword
 
-    #Import user CSV with user info.  
+    #Prompt to choose .CSV file, then import user .CSV.
     try 
     {
         Write-Host "Choose the proper .csv file."
@@ -109,20 +104,20 @@ try
                 }
     }
 
-    #Move old mission users to Disabled Users.
-                                                    <#
-$OldUsers = Get-ADGroupMember -Identity www-science| Import-Csv -path .\temp.csv 
+    #Move old mission users to Disabled Users.  To be added in future. 
+ <#
+    $OldUsers = Get-ADGroupMember -Identity www-science| Import-Csv -path .\temp.csv 
 
-ForEach ($ouser in $OldUsers) 
- {
-  $Usercheck = Get-ADUser -Properties Description
-     if($Usercheck -notcontains $missionID) 
+    ForEach ($ouser in $OldUsers) 
      {
-         Write-Host "Moving $user to Disabled Users"
-         Get-ADUser $ouser| Move-ADObject -TargetPath 'OU=Disabled Users,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu' 
-         Set-ADUser $ouser -Description "SCIENCE"
-     }
-  }
+      $Usercheck = Get-ADUser -Properties Description
+         if($Usercheck -notcontains $missionID) 
+         {
+             Write-Host "Moving $user to Disabled Users"
+             Get-ADUser $ouser| Move-ADObject -TargetPath 'OU=Disabled Users,CN=Users,DC=rv-sallyride,DC=ucsd,DC=edu' 
+             Set-ADUser $ouser -Description "SCIENCE"
+         }
+      }
   #>
  
     }
@@ -153,6 +148,7 @@ ForEach ($ouser in $OldUsers)
 
 }
 
+#Catch all handling.
 catch [System.Object]
 {
         Write-Output "Exception. $_ , Closing" `
